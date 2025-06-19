@@ -7,4 +7,5 @@ import com.fundacion.apoyo.restapi.model.Insumo;
 
 @Repository
 public interface InsumoRepository extends JpaRepository<Insumo, Long> {
+    
 }
