@@ -16,6 +16,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/insumos")
+
 public class InsumoController {
 
     @Autowired

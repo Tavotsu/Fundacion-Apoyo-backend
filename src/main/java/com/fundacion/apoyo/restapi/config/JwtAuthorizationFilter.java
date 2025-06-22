@@ -30,26 +30,25 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         
         String header = request.getHeader("Authorization");
 
-        // Si el header no existe o no empieza con "Bearer ", continuar sin autenticar
         if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extraer el token (quitando el prefijo "Bearer ")
         String token = header.substring(7);
 
         try {
-            // Validar el token
             DecodedJWT decodedJWT = jwtUtil.validateToken(token);
-
-            // Extraer información del token (claims)
             String email = decodedJWT.getSubject();
-            // Supabase incluye el rol en el claim 'role'. Si no, se asigna un rol por defecto.
-            String role = decodedJWT.getClaim("role").asString();
-            List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + (role != null ? role.toUpperCase() : "USER")));
 
-            // Crear el objeto de autenticación
+            // ===============================================
+            //           CAMBIO IMPORTANTE AQUÍ
+            // Ignoramos cualquier rol y asignamos el de
+            // administrador a todos los usuarios autenticados.
+            // ===============================================
+            List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRADOR"));
+            
+            // Crear el objeto de autenticación con los permisos de administrador
             UsernamePasswordAuthenticationToken authenticationToken = 
                 new UsernamePasswordAuthenticationToken(email, null, authorities);
             
@@ -57,12 +56,9 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         } catch (Exception e) {
-            // Si el token es inválido, el contexto de seguridad permanecerá vacío
-            // y el acceso será denegado.
             SecurityContextHolder.clearContext();
         }
 
-        // Continuar con la cadena de filtros
         filterChain.doFilter(request, response);
     }
 }
